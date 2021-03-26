@@ -1,0 +1,2 @@
+# jangii
+Korean Chess
