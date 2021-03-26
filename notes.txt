@@ -1,0 +1,422 @@
+METHODS
+make_move
+    can_move
+        game_is_unfinished: Game state is unfinished
+        piece_at_source: Game board at source not empty
+        piece_at_source_has_turn: Even/odd number of moves then blue/red turn
+        legal_move: Piece move source to destination ok
+    do_move
+        update_board: Game board move source to destination empty source
+        log_move: Log move in record
+    after_move
+        is_in_check: Some blue/red piece can move to red/blue general
+        is_in_checkmate
+            can_move_general: Red/blue general can move
+            can_capture_attacker: Blue/red attack piece can be captured
+            can_block_attacker: Blue/red attack piece can be blocked
+
+can_capture_blue_general_attacker
+    blue_general_source
+    red_sources_with_destination(blue_general_source)
+    blue_sources_with_destination(red_attacker_source)
+    try_move
+    is_blue_in_check
+    undo_move
+
+can_block_blue_general_attacker
+    blue_general_source
+    red_paths_with_destination(blue_general_source)
+    blue_sources_with_destination(red_path_with_destination)
+    try_move
+    is_blue_in_check
+    undo_move
+
+general.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+    destination_in_own_palace: Red/blue general in own palace
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+    try_move: Move red/blue general to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+guard.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+    destination_in_own_palace: Red/blue guard in own palace
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+    try_move: Move red/blue guard to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+elephant.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+    destination_in_board: Red/blue elephant destination in board
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+    try_move: Move red/blue elephant to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+horse.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+    destination_in_board: Red/blue horse destination in board
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+    try_move: Move red/blue horse to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+soldier.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 4 (or more when in palace) destinations from source
+    destination_in_board: Red/blue soldier destination in board
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+    try_move: Move red/blue soldier to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+chariot.destinations_from_source
+    up_destinations_from_source: decrement row until piece or board end tracking paths
+    right_destinations_from_source: increment column until piece or board end tracking paths
+    down_destinations_from_source: increment row until piece or board end tracking paths
+    left_destinations_from_source: decrement column until piece or board end tracking paths
+    diagonal_destinations_from_source: Hard code destinations from source when in palace
+    try_move: Move red/blue chariot to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+cannon.destinations_from_source
+    up_destinations_from_source: decrement row until piece (or board end) then track path until piece or board end
+    right_destinations_from_source: increment column until piece (or board end) then track path until piece or board end
+    down_destinations_from_source: increment row until piece (or board end) then track path until piece or board end
+    left_destinations_from_source: decrement row until piece (or board end) then track path until piece or board end
+    diagonal_destinations_from_source: Hard code destinations from source when in palace
+    try_move: Move red/blue cannon to destination from source in board copy
+    generals_face_to_face: Red/blue general faces blue/red general
+    is_in_check: Red/blue general source in path of blue/red piece
+
+
+DETAILS
+make_move
+    board.position_string_to_tuple
+        | position_tuple[0] = board.columns.index(position_string[0])
+        | position_tuple[1] = board.rows.index(position_string[1])
+    can_move
+        game_is_unfinished: Game state is unfinished
+            | game_state is unfinished
+        board.piece_at_source: Game board at source not empty
+            | board.layout[source] is not None
+        board.piece_at_source_has_turn: Even/odd number of moves then blue/red turn
+            | len(board.moves) even and piece at source is blue
+            | len(board.moves) odd and piece at source is read
+        board.legal_move: Piece move source to destination ok
+            | destination in board.destinations_from_source(source)
+    do_move
+        update_board: Game board move source to destination empty source
+            | board.layout[destination] = board.layout[source]
+            | board.layout[source] = None
+        log_move: Log move in record
+            | board.moves.append(source to destination)
+    after_move
+        is_in_check: Some blue/red piece can move to red/blue general
+            | Iterate board len(moves) even/odd get red/blue general position
+            | Iterate board some blue/red piece can move to red/blue general position
+        is_in_checkmate
+            can_move_general: Red/blue general can move
+                | Iterate board red/blue general can move to some destination
+            can_capture_attacker: Blue/red attack piece can be captured
+                | Iterate board some red/blue piece can capture blue/red attack piece
+                | Try move iterate board no blue/red piece can attack red/blue general
+            can_block_attacker: Blue/red attack piece can be blocked
+                | Iterate board some red/blue piece can move into blue/red attack path
+                | Try move iterate board no blue/red piece can attack red/blue general
+
+general.destinations_from_source
+    piece.unfiltered_destinations_from_source: Hard code 9 destinations from source
+        | Hard code destinations (with paths) then iterate destinations
+    board.destination_in_own_palace: Red/blue general in own palace
+        | Red general destination 0 <= row < 3 and 3 <= column < 6
+        | Blue general destination 7 <= row < len(rows) and 3 <= column < 6
+    board.destination_captures_own_piece: Red/blue piece captures red/blue piece
+        | Red general destination is not None and type(layout[destination]) in red pieces
+        | Blue general destination is not None and type(layout[destination]) in blue pieces
+    board.try_move: Move red/blue general to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    board.generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    board.is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+guard.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+        | Hard code destinations (with paths) then iterate destinations
+    destination_in_own_palace: Red/blue guard in own palace
+        | Red guard destination 0 <= row < 3 and 3 <= column < 6
+        | Blue guard destination 7 <= row < len(rows) and 3 <= column < 6
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+        | Red guard destination is not None and type(layout[destination]) in red pieces
+        | Blue guard destination is not None and type(layout[destination]) in blue pieces
+    try_move: Move red/blue guard to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+elephant.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+        | Hard code destinations (with paths) then iterate destinations
+    destination_in_board: Red/blue elephant destination in board
+        | Red elephant destination 0 <= row < len(rows) and 0 <= column < len(columns)
+        | Blue elephant destination 0 <= row < len(rows) and 0 <= column < len(columns)
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+        | Red elephant destination is not None and type(layout[destination]) in red pieces
+        | Blue elephant destination is not None and type(layout[destination]) in blue pieces
+    try_move: Move red/blue elephant to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+horse.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 9 destinations from source
+        | Hard code destinations (with paths) then iterate destinations
+    destination_in_board: Red/blue horse destination in board
+        | Red horse destination 0 <= row < len(rows) and 0 <= column < len(columns)
+        | Blue horse destination 0 <= row < len(rows) and 0 <= column < len(columns)
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+        | Red horse destination is not None and type(layout[destination]) in red pieces
+        | Blue horse destination is not None and type(layout[destination]) in blue pieces
+    try_move: Move red/blue horse to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+soldier.destinations_from_source
+    unfiltered_destinations_from_source: Hard code 4 (or more when in palace) destinations from source
+        | Hard code destinations (with paths) then iterate destinations
+    destination_in_board: Red/blue soldier destination in board
+        | Red horse destination 0 <= row < len(rows) and 0 <= column < len(columns)
+        | Blue horse destination 0 <= row < len(rows) and 0 <= column < len(columns)
+    destination_captures_own_piece: Red/blue piece captures red/blue piece
+        | Red horse destination is not None and type(layout[destination]) in red pieces
+        | Blue horse destination is not None and type(layout[destination]) in blue pieces
+    try_move: Move red/blue soldier to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+chariot.destinations_from_source
+    up_destinations_from_source: decrement row until piece or board end tracking paths
+        | Decrement row until piece or board end tracking paths
+    right_destinations_from_source: increment column until piece or board end tracking paths
+        | Increment column until piece or board end tracking paths
+    down_destinations_from_source: increment row until piece or board end tracking paths
+        | Increment row until piece or board end tracking paths
+    left_destinations_from_source: decrement column until piece or board end tracking paths
+        | Decrement column until piece or board end tracking paths
+    diagonal_destinations_from_source: Hard code destinations from source when in palace
+        | Hard code
+    try_move: Move red/blue chariot to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+cannon.destinations_from_source
+    up_destinations_from_source: decrement row until piece (or board end) then track path until piece or board end
+        | Decrement row until piece (or board end) then track path until piece or board end
+    right_destinations_from_source: increment column until piece (or board end) then track path until piece or board end
+        | Increment column until piece (or board end) then track path until piece or board end
+    down_destinations_from_source: increment row until piece (or board end) then track path until piece or board end
+        | Increment row until piece (or board end) then track path until piece or board end
+    left_destinations_from_source: decrement row until piece (or board end) then track path until piece or board end
+        | Decrement row until piece (or board end) then track path until piece or board end
+    diagonal_destinations_from_source: Hard code destinations from source when in palace
+        | Hard code
+    try_move: Move red/blue cannon to destination from source in board copy
+        | layout_copy[destination] = layout_copy[source]
+        | layout_copy[source] = None
+    generals_face_to_face: Red/blue general faces blue/red general
+        | Red general increment row until piece or board end
+        | Blue general decrement row until piece or board end
+    is_in_check: Red/blue general source in path of blue/red piece
+        | Iterate board for blue pieces, get their destinations (with paths), red general source in a path
+        | Iterate board for red pieces, get their destinations (with) paths, blue general source in a path
+
+
+SIGNATURES
+game.make_move(source: str, destination: str) -> bool
+    board.position_string_to_tuple(position: str) -> Tuple[int]
+    game.can_move(source: Tuple[int], destination: Tuple[int]) -> bool
+        game.is_unfinished() -> bool
+        board.piece_at_source(source: Tuple[int]) -> bool
+        board.piece_at_source_has_turn(source: Tuple[int]) -> bool
+        board.legal_move(source: Tuple[int], destination: Tuple[int]) -> bool
+            piece.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    game.do_move(source: Tuple[int], destination: Tuple[int]) -> None
+        board.do_move(source: Tuple[int[, destination: Tuple[int]) -> None
+    game.after_move() -> None
+        game.is_in_check(color: str) -> bool  # Required parameter
+            board.is_in_check() -> bool
+        game.is_in_checkmate() -> bool
+            board.is_in_checkmate() -> bool
+                board.can_move_general() -> bool
+                board.can_capture_attacker() -> bool
+                board.can_block_attacker() -> bool
+
+general.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    unfiltered_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_in_own_palace(destination: Tuple[int]) -> bool
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+guard.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    unfiltered_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_in_own_palace(destination: Tuple[int]) -> bool
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+elephant.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    unfiltered_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_in_board(destination: Tuple[int]) -> bool
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+horse.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    unfiltered_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_in_board(destination: Tuple[int]) -> bool
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+soldier.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    unfiltered_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_in_board(destination: Tuple[int]) -> bool
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+chariot.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    up_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    right_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    down_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    left_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    diagonal_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+cannon.destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    up_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    right_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    down_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    left_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    diagonal_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+    board.destination_captures_own_piece(destination: Tuple[int]) -> bool
+    board.try_move(source: Tuple[int], destination: Tuple[int]) -> bool
+    board.generals_face_to_face() -> bool
+    board.is_in_check() -> bool
+
+
+CLASSES
+JanggiGame
+- board: Board
++ get_game_state() -> str
++ is_in_check(color: str) -> bool
++ make_move(source: str, destination: str) -> bool
+
+Board
+- ROWS: Tuple[str]
+- COLUMNS: Tuple[str]
+- BLUE_PALACE_ROW_MIN = 0
+- BLUE_PALACE_ROW_MAX = 2
+- BLUE_PALACE_COLUMN_MIN = 3
+- BLUE_PALACE_COLUMN_MAX = 5
+... RED_PALACE
+- ROWS_MIN = 0
+- ROWS_MAX = len(ROWS)
+- COLUMNS_MIN = 0
+- COLUMN_MAX = len(COLUMNS)
+- BLUE_PIECES = {BlueGeneral, BlueGuard, ...}
+- RED_PIECES = {RedGeneral, RedGuard, ...}
+- moves: List[Tuple[Tuple[int]]]
+- layout: Dict[Tuple[int], Piece]
++ length_moves_even(): bool
++ length_moves_odd(): bool
++ destination_in_blue_palace(destination: Tuple[int]) -> bool
++ destination_in_red_palace(destination: Tuple[int]) -> bool
++ destination_captures_blue_piece(destination: Tuple[int]) -> bool
++ destination_captures_red_piece(destination: Tuple[int]) -> bool
++ try_move(source: Tuple[int], destination: Tuple[int]) -> bool
++ do_generals_face() -> bool
++ blue_general_source
++ destination_in_own_palace(destination: Tuple[int]) -> bool
++ destination_in_board(destination: Tuple[int]) -> bool
++ destination_captures_own_piece(destination: Tuple[int]) -> bool
++ try_move(source: Tuple[int], destination: Tuple[int]) -> bool
++ generals_face_to_face() -> bool
++ is_in_check() -> bool
+
+Piece
++ destinations_from_source(source: Tuple[int], board: Board) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+General(Piece)
++ all_destinations_from_source(source: Tuple[int]) -> Dict[Tuple[int], Tuple[Tuple[int]]]
+RedGeneral(General)
+BlueGeneral(General)
+Guard(Piece)
+RedGuard(Guard)
+BlueGuard(Guard)
+Chariot(Piece)
+Elephant(Piece)
+Horse(Piece)
+Cannon(Piece)
+Soldier(Piece)
+RedSoldier(Soldier)
+BlueSoldier(Soldier)
+
+
+BOARD
+R: Red, B: Blue
+C: Chariot, E: Elephant, H: Horse, U: Guard, G: General, A: Cannon, S: Soldier
+
+  A  B  C  D  E  F  G  H  I
+1|RC|RE|RH|RU|  |RU|RE|RH|RC|
+2|  |  |  |  |RG|  |  |  |  |
+3|  |RA|  |  |  |  |  |RA|  |
+4|RS|  |RS|  |RS|  |RS|  |RS|
+5|  |  |  |  |  |  |  |  |  |
+6|  |  |  |  |  |  |  |  |  |
+7|BS|  |BS|  |BS|  |BS|  |BS|
+8|  |BA|  |  |  |  |  |BA|  |
+9|  |  |  |  |BG|  |  |  |  |
+10|BC|BE|BH|BU|  |BU|BE|BH|BC|
